@@ -13,13 +13,14 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .status-badge { transition: all 0.3s ease; }
+        .campaign-pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-20">
 
     <!-- Header -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 glass">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 glass">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center gap-2">
@@ -28,10 +29,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                         </svg>
                     </div>
-                    <h1 class="text-xl font-bold text-slate-800">Outreach Pro</h1>
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-800 leading-tight">Outreach Pro</h1>
+                        <span id="campaignStatusLabel" class="text-[10px] font-bold text-blue-500 uppercase tracking-widest hidden">Campaign Active</span>
+                    </div>
                 </div>
                 <div class="flex items-center gap-4">
-                    <button id="resetBtn" class="text-xs text-red-500 hover:underline font-medium">Clear All Data</button>
+                    <button id="resetBtn" class="text-xs text-red-500 hover:underline font-medium">Reset All</button>
                     <label class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -47,266 +51,445 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
         <!-- Dashboard Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-sm font-medium text-slate-500 mb-1">Total Contacts</p>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <p class="text-xs font-semibold text-slate-400 uppercase mb-1">Total</p>
                 <h3 id="totalCount" class="text-2xl font-bold text-slate-900">0</h3>
             </div>
-            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-sm font-medium text-slate-500 mb-1">Messaged</p>
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <p class="text-xs font-semibold text-green-500 uppercase mb-1">Messaged</p>
                 <h3 id="messagedCount" class="text-2xl font-bold text-green-600">0</h3>
             </div>
-            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-sm font-medium text-slate-500 mb-1">Remaining</p>
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <p class="text-xs font-semibold text-red-400 uppercase mb-1">Failed</p>
+                <h3 id="failedCount" class="text-2xl font-bold text-red-500">0</h3>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <p class="text-xs font-semibold text-orange-400 uppercase mb-1">Untouched</p>
                 <h3 id="pendingCount" class="text-2xl font-bold text-orange-500">0</h3>
             </div>
         </div>
 
-        <!-- Template Editor -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm mb-8 overflow-hidden">
-            <button id="toggleSettings" class="w-full px-6 py-4 flex justify-between items-center hover:bg-slate-50 transition">
-                <span class="font-semibold text-slate-700 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <!-- Campaign Mode Section -->
+        <div id="campaignBanner" class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl p-6 mb-8 shadow-lg flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="max-w-md">
+                <h2 class="text-xl font-bold mb-1 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                     </svg>
-                    Message Templates
-                </span>
-                <svg id="settingsArrow" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-            </button>
-            <div id="settingsPanel" class="hidden px-6 pb-6 border-t border-slate-100 mt-2 pt-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-2">WhatsApp / SMS Content</label>
-                        <textarea id="messageTemplate" class="w-full h-32 p-3 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" placeholder="Hello {name}, I saw your business {business_name} in {address}..."></textarea>
-                        <p class="text-[10px] text-slate-400 mt-2">Available tags: {name}, {business_name}, {niche}, {address}</p>
+                    Campaign Blast Mode
+                </h2>
+                <p class="text-blue-100 text-sm">Automated sequential messaging. Choose your channel and message below, then launch.</p>
+            </div>
+            <div class="flex flex-wrap justify-center gap-3">
+                <div class="bg-white/10 p-1 rounded-lg flex items-center">
+                    <button id="setWaChannel" class="px-4 py-2 rounded-md text-sm font-bold bg-white text-blue-600 transition shadow-sm">WhatsApp</button>
+                    <button id="setSmsChannel" class="px-4 py-2 rounded-md text-sm font-bold text-white transition">SMS</button>
+                </div>
+                <button id="startCampaignBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-2 rounded-lg font-bold transition shadow-md flex items-center gap-2">
+                    Launch Campaign
+                </button>
+            </div>
+        </div>
+
+        <!-- Customizable Messages -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-700 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                        WhatsApp Template
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <textarea id="waTemplate" class="w-full h-32 p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none mb-2" placeholder="Hi {business_name}, saw your {niche} shop in {address}..."></textarea>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded cursor-help" title="Business Name">{business_name}</span>
+                        <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded cursor-help" title="Niche">{niche}</span>
+                        <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded cursor-help" title="Address">{address}</span>
                     </div>
-                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Preview</h4>
-                        <div id="messagePreview" class="text-sm text-slate-600 italic">No template set</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-700 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        SMS Template
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <textarea id="smsTemplate" class="w-full h-32 p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none mb-2" placeholder="Hi {business_name}, we are interested in your services in {address}..."></textarea>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded cursor-help">{business_name}</span>
+                        <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded cursor-help">{niche}</span>
+                        <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded cursor-help">{address}</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Search & Filter -->
-        <div class="mb-6 flex flex-col md:flex-row gap-4">
-            <div class="relative flex-grow">
-                <input type="text" id="searchInput" placeholder="Search by name, niche, or address..." class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="mb-6 flex flex-col md:flex-row gap-4 items-center">
+            <div class="relative flex-grow w-full">
+                <input type="text" id="searchInput" placeholder="Search by name, niche or address..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm transition shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 absolute left-3 top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
             </div>
-            <select id="statusFilter" class="px-4 py-2 border border-slate-200 rounded-lg outline-none text-sm bg-white">
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="messaged">Messaged</option>
-            </select>
+            <div class="flex gap-2 w-full md:w-auto">
+                <select id="statusFilter" class="px-4 py-2 border border-slate-200 rounded-xl outline-none text-sm bg-white shadow-sm">
+                    <option value="all">Show All</option>
+                    <option value="pending">Untouched Only</option>
+                    <option value="messaged">Already Messaged</option>
+                    <option value="failed">Failed Numbers</option>
+                </select>
+                <button id="toggleSelectionBtn" class="px-4 py-2 bg-slate-800 text-white text-sm font-bold rounded-xl hover:bg-slate-700 transition whitespace-nowrap shadow-sm">
+                    Select Mode
+                </button>
+            </div>
         </div>
 
-        <!-- Data Table -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <!-- Main Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-slate-50 border-b border-slate-200">
                         <tr>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Business Info</th>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Niche</th>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Address</th>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact Status</th>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                            <th id="checkboxHeader" class="px-6 py-4 hidden w-10">
+                                <input type="checkbox" id="selectAllCheckbox" class="rounded border-slate-300 h-4 w-4">
+                            </th>
+                            <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Target Business</th>
+                            <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Niche & Area</th>
+                            <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status Tracking</th>
+                            <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Instant Action</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody" class="divide-y divide-slate-100">
-                        <!-- Rows will be injected here -->
-                        <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-slate-400 italic">
-                                No data uploaded yet. Please upload your CSV file to begin.
-                            </td>
-                        </tr>
+                        <tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 italic">No data yet. Upload a CSV.</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </main>
 
-    <!-- App Persistence Manager Script -->
-    <script>
-        let businessData = [];
-        let outreachLogs = JSON.parse(localStorage.getItem('outreach_logs') || '{}');
-        let appTemplate = localStorage.getItem('outreach_template') || "Hello {business_name}, I found your {niche} business at {address}. I'd love to discuss a collaboration!";
+    <!-- Fullscreen Campaign Runner Overlay -->
+    <div id="campaignRunner" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden border border-white/20">
+            <!-- Header -->
+            <div id="runnerHeader" class="bg-blue-600 px-8 py-6 text-white text-center">
+                <h3 class="text-2xl font-black italic tracking-tighter">CAMPAIGN IN PROGRESS</h3>
+                <p id="runnerChannelInfo" class="text-blue-100 text-xs font-bold uppercase tracking-widest mt-1">Channel: WhatsApp</p>
+            </div>
 
-        const csvUpload = document.getElementById('csvUpload');
+            <!-- Body -->
+            <div class="p-8">
+                <div class="mb-8 text-center">
+                    <div class="relative inline-block mb-4">
+                        <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto text-blue-600 campaign-pulse">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                        </div>
+                        <div class="absolute -top-1 -right-1 bg-emerald-500 text-white text-[10px] px-2 py-1 rounded-full font-black border-2 border-white" id="countBadge">1/10</div>
+                    </div>
+                    
+                    <h4 id="currentTargetName" class="text-xl font-bold text-slate-800">Business Name</h4>
+                    <p id="currentTargetPhone" class="text-slate-500 font-medium">08123456789</p>
+                </div>
+
+                <div class="w-full bg-slate-100 rounded-full h-3 mb-8 overflow-hidden">
+                    <div id="runnerProgress" class="bg-blue-600 h-full transition-all duration-500" style="width: 10%"></div>
+                </div>
+
+                <div class="space-y-3">
+                    <button id="launchNextBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 transition-all active:scale-95">
+                        Trigger Message
+                    </button>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="markFailedNextBtn" class="bg-red-50 hover:bg-red-100 text-red-600 py-3 rounded-xl font-bold text-sm transition">
+                            Mark Failed & Skip
+                        </button>
+                        <button id="stopCampaignBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition">
+                            Stop Campaign
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-8 pb-6 text-center">
+                <p class="text-[10px] text-slate-400 font-medium italic">Return to this tab after sending to trigger the next contact.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let businesses = [];
+        let logs = JSON.parse(localStorage.getItem('outreach_logs_v2') || '{}');
+        let config = {
+            waTemplate: localStorage.getItem('wa_template') || "Hello {business_name}, I saw your {niche} business in {address}. Would love to discuss a partnership!",
+            smsTemplate: localStorage.getItem('sms_template') || "Hi {business_name}, we are interested in your services at {address}. Please call us back.",
+            channel: 'whatsapp'
+        };
+
+        // DOM Elements
         const tableBody = document.getElementById('tableBody');
+        const csvUpload = document.getElementById('csvUpload');
         const searchInput = document.getElementById('searchInput');
         const statusFilter = document.getElementById('statusFilter');
-        const messageTemplate = document.getElementById('messageTemplate');
-        const messagePreview = document.getElementById('messagePreview');
-        const toggleSettings = document.getElementById('toggleSettings');
-        const settingsPanel = document.getElementById('settingsPanel');
-        const settingsArrow = document.getElementById('settingsArrow');
-        const totalCount = document.getElementById('totalCount');
-        const messagedCount = document.getElementById('messagedCount');
-        const pendingCount = document.getElementById('pendingCount');
-        const resetBtn = document.getElementById('resetBtn');
+        const waTemplate = document.getElementById('waTemplate');
+        const smsTemplate = document.getElementById('smsTemplate');
+        const setWaChannel = document.getElementById('setWaChannel');
+        const setSmsChannel = document.getElementById('setSmsChannel');
+        const toggleSelectionBtn = document.getElementById('toggleSelectionBtn');
+        const checkboxHeader = document.getElementById('checkboxHeader');
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const startCampaignBtn = document.getElementById('startCampaignBtn');
+        
+        // Runner Elements
+        const campaignRunner = document.getElementById('campaignRunner');
+        const currentTargetName = document.getElementById('currentTargetName');
+        const currentTargetPhone = document.getElementById('currentTargetPhone');
+        const runnerProgress = document.getElementById('runnerProgress');
+        const countBadge = document.getElementById('countBadge');
+        const runnerChannelInfo = document.getElementById('runnerChannelInfo');
+        const launchNextBtn = document.getElementById('launchNextBtn');
+        const markFailedNextBtn = document.getElementById('markFailedNextBtn');
+        const stopCampaignBtn = document.getElementById('stopCampaignBtn');
 
-        // Init
-        messageTemplate.value = appTemplate;
-        updatePreview();
+        let selectionMode = false;
+        let activeQueue = [];
+        let activeIdx = 0;
 
-        // Load existing data if available
-        const cachedData = localStorage.getItem('business_data_cache');
-        if (cachedData) {
-            businessData = JSON.parse(cachedData);
-            renderTable();
+        // Initialization
+        waTemplate.value = config.waTemplate;
+        smsTemplate.value = config.smsTemplate;
+        const cached = localStorage.getItem('business_cache');
+        if (cached) {
+            businesses = JSON.parse(cached);
+            render();
         }
 
-        // CSV Upload Handler
-        csvUpload.addEventListener('change', (e) => {
+        // Logic Functions
+        function cleanPhone(p) {
+            if (!p) return "";
+            let c = p.toString().replace(/\D/g, '');
+            if (c.startsWith('0') && c.length === 11) c = '234' + c.substring(1);
+            return c;
+        }
+
+        function formatMsg(tmpl, biz) {
+            return tmpl
+                .replace(/{business_name}/g, biz.business_name || 'Business')
+                .replace(/{niche}/g, biz.niche || 'Industry')
+                .replace(/{address}/g, biz.address || 'Local Area');
+        }
+
+        function updateLog(phone, status) {
+            const now = new Date();
+            logs[phone] = {
+                status: status,
+                time: now.toLocaleString(),
+                rawDate: now.toISOString()
+            };
+            localStorage.setItem('outreach_logs_v2', JSON.stringify(logs));
+            render();
+        }
+
+        // CSV Handling
+        csvUpload.addEventListener('change', e => {
             const file = e.target.files[0];
             if (!file) return;
-
             Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    businessData = results.data;
-                    localStorage.setItem('business_data_cache', JSON.stringify(businessData));
-                    renderTable();
+                header: true, skipEmptyLines: true,
+                complete: res => {
+                    businesses = res.data.map((b, i) => ({ ...b, id: `biz_${i}` }));
+                    localStorage.setItem('business_cache', JSON.stringify(businesses));
+                    render();
                 }
             });
         });
 
-        // Template Management
-        messageTemplate.addEventListener('input', () => {
-            appTemplate = messageTemplate.value;
-            localStorage.setItem('outreach_template', appTemplate);
-            updatePreview();
+        // Event Listeners
+        searchInput.addEventListener('input', render);
+        statusFilter.addEventListener('change', render);
+
+        waTemplate.addEventListener('input', () => {
+            config.waTemplate = waTemplate.value;
+            localStorage.setItem('wa_template', config.waTemplate);
         });
 
-        function updatePreview() {
-            messagePreview.innerText = formatMessage(appTemplate, {
-                business_name: "Business Name",
-                niche: "Niche",
-                address: "Ibadan, Nigeria"
-            });
-        }
+        smsTemplate.addEventListener('input', () => {
+            config.smsTemplate = smsTemplate.value;
+            localStorage.setItem('sms_template', config.smsTemplate);
+        });
 
-        function formatMessage(template, item) {
-            return template
-                .replace(/{business_name}/g, item.business_name || '')
-                .replace(/{name}/g, item.business_name || '')
-                .replace(/{niche}/g, item.niche || '')
-                .replace(/{address}/g, item.address || '');
-        }
+        setWaChannel.addEventListener('click', () => {
+            config.channel = 'whatsapp';
+            setWaChannel.className = "px-4 py-2 rounded-md text-sm font-bold bg-white text-blue-600 transition shadow-sm";
+            setSmsChannel.className = "px-4 py-2 rounded-md text-sm font-bold text-white transition";
+            runnerChannelInfo.innerText = "Channel: WhatsApp";
+        });
 
-        // Phone cleaning
-        function cleanPhone(phone) {
-            if (!phone) return "";
-            // Remove non-numeric characters
-            let cleaned = phone.replace(/\D/g, '');
-            // Simple Nigerian logic: if starts with 0 and 11 digits, change to 234
-            if (cleaned.startsWith('0') && cleaned.length === 11) {
-                cleaned = '234' + cleaned.substring(1);
+        setSmsChannel.addEventListener('click', () => {
+            config.channel = 'sms';
+            setSmsChannel.className = "px-4 py-2 rounded-md text-sm font-bold bg-white text-blue-600 transition shadow-sm";
+            setWaChannel.className = "px-4 py-2 rounded-md text-sm font-bold text-white transition";
+            runnerChannelInfo.innerText = "Channel: SMS";
+        });
+
+        toggleSelectionBtn.addEventListener('click', () => {
+            selectionMode = !selectionMode;
+            checkboxHeader.classList.toggle('hidden');
+            toggleSelectionBtn.innerText = selectionMode ? "Cancel Select" : "Select Mode";
+            render();
+        });
+
+        selectAllCheckbox.addEventListener('change', () => {
+            document.querySelectorAll('.row-cb').forEach(cb => cb.checked = selectAllCheckbox.checked);
+        });
+
+        // Campaign Runner Logic
+        startCampaignBtn.addEventListener('click', () => {
+            activeQueue = [];
+            if (selectionMode) {
+                const checked = document.querySelectorAll('.row-cb:checked');
+                checked.forEach(cb => {
+                    const b = businesses.find(x => x.id === cb.dataset.id);
+                    if (b) activeQueue.push(b);
+                });
+            } else {
+                // Default: All untouched
+                activeQueue = businesses.filter(b => !logs[cleanPhone(b.phone)]);
             }
-            // If already looks like a valid int number, keep it
-            return cleaned;
-        }
 
-        // Action Handlers
-        function markAsMessaged(phone) {
-            const now = new Date();
-            outreachLogs[phone] = {
-                timestamp: now.toLocaleString(),
-                date: now.toISOString()
-            };
-            localStorage.setItem('outreach_logs', JSON.stringify(outreachLogs));
-            renderTable();
-        }
-
-        // Search & Filter
-        searchInput.addEventListener('input', renderTable);
-        statusFilter.addEventListener('change', renderTable);
-
-        function renderTable() {
-            const query = searchInput.value.toLowerCase();
-            const filterValue = statusFilter.value;
-            
-            const filtered = businessData.filter(item => {
-                const searchMatch = 
-                    (item.business_name?.toLowerCase() || "").includes(query) ||
-                    (item.niche?.toLowerCase() || "").includes(query) ||
-                    (item.address?.toLowerCase() || "").includes(query);
-                
-                const phone = cleanPhone(item.phone);
-                const isMessaged = !!outreachLogs[phone];
-                
-                if (filterValue === 'pending') return searchMatch && !isMessaged;
-                if (filterValue === 'messaged') return searchMatch && isMessaged;
-                return searchMatch;
-            });
-
-            // Update Counts
-            const total = businessData.length;
-            const messaged = Object.keys(outreachLogs).length;
-            totalCount.innerText = total;
-            messagedCount.innerText = messaged;
-            pendingCount.innerText = total - messaged;
-
-            if (filtered.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 italic">No matching businesses found.</td></tr>`;
+            if (activeQueue.length === 0) {
+                alert("No businesses selected or no untouched contacts found.");
                 return;
             }
 
-            tableBody.innerHTML = filtered.map((item, index) => {
-                const phone = cleanPhone(item.phone);
-                const log = outreachLogs[phone];
-                const isMessaged = !!log;
-                const message = encodeURIComponent(formatMessage(appTemplate, item));
+            activeIdx = 0;
+            showRunner();
+        });
+
+        function showRunner() {
+            campaignRunner.classList.remove('hidden');
+            updateRunnerUI();
+        }
+
+        function updateRunnerUI() {
+            if (activeIdx >= activeQueue.length) {
+                currentTargetName.innerText = "Blast Complete!";
+                currentTargetPhone.innerText = `Processed ${activeQueue.length} contacts`;
+                launchNextBtn.innerText = "Close Runner";
+                launchNextBtn.onclick = () => campaignRunner.classList.add('hidden');
+                markFailedNextBtn.classList.add('hidden');
+                return;
+            }
+
+            const biz = activeQueue[activeIdx];
+            currentTargetName.innerText = biz.business_name || 'Unknown';
+            currentTargetPhone.innerText = biz.phone || 'No Phone';
+            countBadge.innerText = `${activeIdx + 1}/${activeQueue.length}`;
+            
+            const progress = ((activeIdx) / activeQueue.length) * 100;
+            runnerProgress.style.width = `${progress}%`;
+
+            launchNextBtn.onclick = () => {
+                const phone = cleanPhone(biz.phone);
+                const tmpl = config.channel === 'whatsapp' ? config.waTemplate : config.smsTemplate;
+                const msg = encodeURIComponent(formatMsg(tmpl, biz));
+                
+                updateLog(phone, 'messaged');
+                
+                if (config.channel === 'whatsapp') {
+                    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+                } else {
+                    location.href = `sms:${phone}?body=${msg}`;
+                }
+
+                activeIdx++;
+                updateRunnerUI();
+            };
+
+            markFailedNextBtn.classList.remove('hidden');
+            markFailedNextBtn.onclick = () => {
+                updateLog(cleanPhone(biz.phone), 'failed');
+                activeIdx++;
+                updateRunnerUI();
+            };
+        }
+
+        stopCampaignBtn.addEventListener('click', () => {
+            if (confirm("Stop campaign mid-way? Progress so far is saved.")) {
+                campaignRunner.classList.add('hidden');
+            }
+        });
+
+        // Rendering
+        function render() {
+            const query = searchInput.value.toLowerCase();
+            const f = statusFilter.value;
+
+            const filtered = businesses.filter(b => {
+                const match = (b.business_name?.toLowerCase().includes(query)) || (b.niche?.toLowerCase().includes(query));
+                const phone = cleanPhone(b.phone);
+                const s = logs[phone]?.status || 'pending';
+                if (f === 'all') return match;
+                return match && s === f;
+            });
+
+            // Update Counts
+            const lArr = Object.values(logs);
+            document.getElementById('totalCount').innerText = businesses.length;
+            document.getElementById('messagedCount').innerText = lArr.filter(x => x.status === 'messaged').length;
+            document.getElementById('failedCount').innerText = lArr.filter(x => x.status === 'failed').length;
+            document.getElementById('pendingCount').innerText = businesses.length - lArr.length;
+
+            if (filtered.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 italic">No matching results.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = filtered.map(b => {
+                const phone = cleanPhone(b.phone);
+                const log = logs[phone];
+                const status = log?.status || 'pending';
+                
+                let badge = `<span class="text-slate-300 text-[10px] font-bold uppercase tracking-wider">Untouched</span>`;
+                if (status === 'messaged') badge = `<div class="flex flex-col"><span class="text-green-600 font-bold text-xs">✓ Sent</span><span class="text-[9px] text-slate-400">${log.time}</span></div>`;
+                if (status === 'failed') badge = `<span class="bg-red-50 text-red-500 px-2 py-0.5 rounded text-[10px] font-black border border-red-100 uppercase">Invalid</span>`;
 
                 return `
-                    <tr class="hover:bg-slate-50/50 transition">
-                        <td class="px-6 py-4">
-                            <div class="font-semibold text-slate-800">${item.business_name || 'Unknown Business'}</div>
-                            <div class="text-xs text-slate-500">${item.phone || 'No phone'}</div>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-slate-600">
-                            <span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-[11px] font-medium uppercase tracking-wider">${item.niche || 'General'}</span>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-slate-500 max-w-xs truncate">
-                            ${item.address || '—'}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-6 py-4 ${selectionMode ? '' : 'hidden'}">
+                            <input type="checkbox" data-id="${b.id}" class="row-cb h-4 w-4 rounded border-slate-300">
                         </td>
                         <td class="px-6 py-4">
-                            ${isMessaged 
-                                ? `<div class="flex flex-col">
-                                    <span class="text-green-600 flex items-center gap-1 text-sm font-medium">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                        </svg>
-                                        Messaged
-                                    </span>
-                                    <span class="text-[10px] text-slate-400 ml-5">${log.timestamp}</span>
-                                   </div>`
-                                : `<span class="text-slate-300 text-sm italic">Not contacted</span>`
-                            }
+                            <div class="font-bold text-slate-800 text-sm">${b.business_name || 'N/A'}</div>
+                            <div class="text-[11px] text-slate-400 font-medium">${b.phone || 'No phone'}</div>
                         </td>
+                        <td class="px-6 py-4">
+                            <div class="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full inline-block mb-1 uppercase tracking-tighter">${b.niche || '—'}</div>
+                            <div class="text-[10px] text-slate-500 truncate max-w-[150px]">${b.address || ''}</div>
+                        </td>
+                        <td class="px-6 py-4">${badge}</td>
                         <td class="px-6 py-4 text-right">
-                            <div class="flex justify-end gap-2">
-                                <a href="https://wa.me/${phone}?text=${message}" 
-                                   target="_blank"
-                                   onclick="markAsMessaged('${phone}')"
-                                   class="p-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition shadow-sm"
-                                   title="Message on WhatsApp">
-                                   <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.94 3.675 1.439 5.662 1.439h.05c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                                </a>
-                                <a href="sms:${phone}?body=${message}" 
-                                   onclick="markAsMessaged('${phone}')"
-                                   class="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition shadow-sm"
-                                   title="Send SMS">
-                                   <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-                                </a>
+                            <div class="flex justify-end gap-1">
+                                <button onclick="quickMessage('${b.id}', 'wa')" class="p-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition shadow-sm" title="WhatsApp">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.94 3.675 1.439 5.662 1.439h.05c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                </button>
+                                <button onclick="quickMessage('${b.id}', 'sms')" class="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition shadow-sm" title="SMS">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                                </button>
+                                <button onclick="updateStatus('${phone}', 'failed')" class="p-2 rounded-lg bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition shadow-sm" title="Mark Invalid">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -314,15 +497,21 @@
             }).join('');
         }
 
-        // Settings Toggle
-        toggleSettings.addEventListener('click', () => {
-            settingsPanel.classList.toggle('hidden');
-            settingsArrow.classList.toggle('rotate-180');
-        });
+        window.quickMessage = (id, type) => {
+            const b = businesses.find(x => x.id === id);
+            if (!b) return;
+            const phone = cleanPhone(b.phone);
+            const tmpl = type === 'wa' ? config.waTemplate : config.smsTemplate;
+            const msg = encodeURIComponent(formatMsg(tmpl, b));
+            updateLog(phone, 'messaged');
+            if (type === 'wa') window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+            else location.href = `sms:${phone}?body=${msg}`;
+        };
 
-        // Reset functionality
-        resetBtn.addEventListener('click', () => {
-            if (confirm("Are you sure? This will delete all uploaded data and messaging logs.")) {
+        window.updateStatus = updateLog;
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm("Reset everything? Cache and logs will be wiped.")) {
                 localStorage.clear();
                 window.location.reload();
             }
